@@ -27,7 +27,7 @@ A modern React application built with TypeScript for creating, viewing, and mana
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/AhmedMedhat77/Elevate-post.git
    cd elevate-post
    ```
 
