@@ -16,12 +16,14 @@ const PostsScreen = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [userId, setUserId] = useState<number | undefined>(undefined);
-  const { setSelectedPost } = usePostsStore();
+  const [searchQuery, setSearchQuery] = useState("");
+  const { setSelectedPost, setPosts } = usePostsStore();
   const { data: users } = useGetUsers();
   const { data, error, isLoading } = useGetPosts({
     page,
     limit,
     id: userId,
+    search: searchQuery,
   });
 
   // Show Toast on Error
@@ -33,6 +35,18 @@ const PostsScreen = () => {
       });
     }
   }, [error]);
+
+  // Reset page when search or filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, userId]);
+
+  // Update store with fetched data to prevent duplicates
+  useEffect(() => {
+    if (data?.data) {
+      setPosts(data.data);
+    }
+  }, [data?.data, setPosts]);
 
   const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / limit));
 
@@ -54,7 +68,12 @@ const PostsScreen = () => {
         {/* Search and Sort  */}
         <div className="flex flex-row items-center justify-between py-5 px-6 gap-3 bg-black/10 border border-black/15 ">
           <SearchInput
-            onSearch={(value) => console.log(value)}
+            onSearch={(value) => {
+              setSearchQuery(value);
+              if (value.trim().length > 0) {
+                setUserId(undefined);
+              }
+            }}
             placeholder="Search for a post..."
             className="py-4 px-8 bg-white rounded-2xl h-12"
           />
@@ -62,10 +81,31 @@ const PostsScreen = () => {
             <label htmlFor="sort">Author:</label>
             <CustomSelect
               className="bg-white"
-              value={userId?.toString() || data?.data[0].userId.toString()}
-              onValueChange={(value) => setUserId(parseInt(value))}
+              value={userId?.toString() || "0"}
+              onValueChange={(value) => {
+                const newUserId = value === "0" ? undefined : parseInt(value);
+                setUserId(newUserId);
+                if (newUserId) {
+                  setSearchQuery("");
+                }
+              }}
             >
-              {users?.data.map((user: IUser) => (
+              {[
+                {
+                  id: 0,
+                  name: "All",
+                  username: "",
+                  email: "",
+                  address: {
+                    street: "",
+                    suite: "",
+                    city: "",
+                    zipcode: "",
+                    geo: { lat: "", lng: "" },
+                  },
+                },
+                ...(users?.data || []),
+              ].map((user: IUser) => (
                 <SelectItem key={user.id} value={user.id.toString()}>
                   {user.name}
                 </SelectItem>
@@ -75,7 +115,7 @@ const PostsScreen = () => {
         </div>
 
         {/* Post List  */}
-        <div className=" max-h-[650px] overflow-y-auto ">
+        <div className=" h-[650px] overflow-y-auto ">
           {data?.data.map((post) => (
             <Link
               to={`/posts/${post.id}`}

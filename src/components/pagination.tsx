@@ -1,5 +1,4 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import { useState } from "react";
 
 const Pagination = ({
   totalPages,
@@ -10,39 +9,32 @@ const Pagination = ({
   currentPage: number;
   onPageChange: (page: number) => void;
 }) => {
-  const [currentPageState, setCurrentPageState] = useState(currentPage || 1);
-
   const handlePageChange = (page: number) => {
-    setCurrentPageState(page);
     onPageChange(page);
   };
 
   const onPreviousPage = () => {
-    if (currentPageState === 1) return;
-    setCurrentPageState(currentPageState - 1);
-    onPageChange(currentPageState - 1);
+    if (currentPage === 1) return;
+    onPageChange(currentPage - 1);
   };
 
   const onNextPage = () => {
-    if (currentPageState === totalPages) return;
-    setCurrentPageState(currentPageState + 1);
-    onPageChange(currentPageState + 1);
+    if (currentPage === totalPages) return;
+    onPageChange(currentPage + 1);
   };
 
   const onFirstPage = () => {
-    if (currentPageState === 1) return;
-    setCurrentPageState(1);
+    if (currentPage === 1) return;
     onPageChange(1);
   };
 
   const onLastPage = () => {
-    if (currentPageState === totalPages) return;
-    setCurrentPageState(totalPages);
+    if (currentPage === totalPages) return;
     onPageChange(totalPages);
   };
 
   // Compute current 2-page group: [1,2], [3,4], [5,6], ...
-  const pairStart = Math.floor((currentPageState - 1) / 2) * 2 + 1;
+  const pairStart = Math.floor((currentPage - 1) / 2) * 2 + 1;
   const pairPages = [pairStart, pairStart + 1].filter((p) => p <= totalPages);
 
   return (
@@ -60,7 +52,7 @@ const Pagination = ({
         <span
           key={page}
           onClick={() => handlePageChange(page)}
-          className={` pagination-number ${page === currentPageState && "bg-[#2F80ED] text-white"}`}
+          className={` pagination-number ${page === currentPage && "bg-[#2F80ED] text-white"}`}
         >
           {page}
         </span>
@@ -69,7 +61,7 @@ const Pagination = ({
       {pairPages[pairPages.length - 1] < totalPages && <span>...</span>}
 
       {/* Show last page only when current page is not the last page */}
-      {currentPageState !== totalPages && (
+      {currentPage !== totalPages && (
         <span className="pagination-number" onClick={() => handlePageChange(totalPages)}>
           {totalPages}
         </span>

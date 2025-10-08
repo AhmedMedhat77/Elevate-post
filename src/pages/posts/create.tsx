@@ -13,10 +13,11 @@ import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetUsers } from "@/hooks/useGetUsers";
 import type { IUser } from "@/types";
+import { usePostsStore } from "@/store/usePostsStore";
 
 const CreatePost = () => {
   const { mutate, isPending, error } = useCreatePost();
-
+  const { addPost } = usePostsStore();  
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -37,20 +38,22 @@ const CreatePost = () => {
     resolver: zodResolver(createPostSchema),
   });
 
-  const onSubmit = handleSubmit((data) => {
-    mutate(
-      { ...data, id: data.userId },
-      {
-        onSuccess: () => {
-          toast.success("Post created successfully");
-          navigate("/");
-          queryClient.invalidateQueries({ queryKey: ["posts"] });
-        },
-        onError: () => {
-          toast.error("Failed to create post");
-        },
-      }
-    );
+  const onSubmit = handleSubmit((data: ICreatePostForm) => {
+    mutate(data, {
+      onSuccess: (response) => {
+        // Add the new post to the store to prevent duplicates
+        if (response.data) {
+          addPost(response.data);
+        }
+        toast.success("Post created successfully");
+        navigate("/");
+        queryClient.invalidateQueries({ queryKey: ["posts"] });
+      },
+      onError: (error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : "Failed to create post";
+        toast.error(errorMessage);
+      },
+    });
   });
 
   return (
@@ -66,7 +69,7 @@ const CreatePost = () => {
       {/* Form takes remaining space */}
       <div className="flex-1 p-6">
         <form
-          className="bg-white w-full w-full md:w-[75%]  rounded-md p-6 grid gap-2 h-full"
+          className="bg-white w-full md:w-[75%] rounded-md p-6 grid gap-2 h-full"
           onSubmit={onSubmit}
         >
           <div className="space-y-8 flex flex-col">
@@ -109,7 +112,7 @@ const CreatePost = () => {
             <ErrorComponent error={error?.message} />
 
             <Button disabled={isPending} className=" self-end h-10 w-full lg:w-[50%]">
-              Create Post
+              {isPending ? "Creating..." : "Create Post"}
             </Button>
           </div>
         </form>

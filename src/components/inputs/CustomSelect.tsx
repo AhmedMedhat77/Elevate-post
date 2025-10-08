@@ -3,7 +3,7 @@ import { forwardRef } from "react";
 import { FormField } from "./FormField";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "../ui/select";
 
-interface SelectProps {
+interface SelectProps extends React.ComponentProps<typeof Select> {
   label?: string;
   error?: string;
   labelClassName?: string;
